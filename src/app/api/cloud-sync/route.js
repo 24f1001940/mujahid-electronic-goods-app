@@ -48,7 +48,7 @@ export async function POST(request) {
         if (!remote) return true;
         const incomingTime = Date.parse(row.updated_at || row.payload?.updatedAt || '');
         const remoteTime = Date.parse(remote.updated_at || remote.payload?.updatedAt || '');
-        return !Number.isFinite(remoteTime) || (Number.isFinite(incomingTime) && incomingTime >= remoteTime);
+        return !Number.isFinite(remoteTime) || (Number.isFinite(incomingTime) && incomingTime > remoteTime);
       });
       if (rowsToUpsert.length > 0) {
         const { error: upsertError } = await supabase.from(table).upsert(rowsToUpsert);

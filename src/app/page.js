@@ -362,7 +362,7 @@ export default function MujahidElectronicApp() {
     const file = event.target.files?.[0];
     if (!file) return;
     const base64 = await fileToBase64(file);
-    await db.products.update(productId, { image: base64 });
+    await db.products.update(productId, { image: base64, updatedAt: new Date().toISOString() });
     await refreshAllData();
   };
 
@@ -417,7 +417,8 @@ export default function MujahidElectronicApp() {
       name: newRaw.name,
       stock: Number(newRaw.stock) || 0,
       unitCost: Number(newRaw.unitCost) || 0,
-      qtyPerKit: Number(newRaw.qtyPerKit) || 1
+      qtyPerKit: Number(newRaw.qtyPerKit) || 1,
+      updatedAt: new Date().toISOString()
     });
     setNewRaw({ name: '', stock: '', unitCost: '', qtyPerKit: '1' });
     await refreshAllData();
@@ -438,7 +439,7 @@ export default function MujahidElectronicApp() {
     // Deduct raw materials
     for (const rm of rawMaterials) {
       const needed = (rm.qtyPerKit || 1) * kitsToBuild;
-      await db.rawMaterials.update(rm.id, { stock: rm.stock - needed });
+      await db.rawMaterials.update(rm.id, { stock: rm.stock - needed, updatedAt: new Date().toISOString() });
     }
 
     // Add to Dawat Mic Complete Set finished stock
@@ -446,7 +447,8 @@ export default function MujahidElectronicApp() {
     if (dawatProd) {
       await db.products.update(dawatProd.id, {
         stock: (Number(dawatProd.stock) || 0) + kitsToBuild,
-        arrivalDate: `Assembled on ${new Date().toLocaleString('en-IN')}`
+        arrivalDate: `Assembled on ${new Date().toLocaleString('en-IN')}`,
+        updatedAt: new Date().toISOString()
       });
     }
 
@@ -2279,12 +2281,12 @@ export default function MujahidElectronicApp() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={async () => { await db.rawMaterials.update(rm.id, { stock: Math.max(0, rm.stock - 1) }); await refreshAllData(); }}
+                            onClick={async () => { await db.rawMaterials.update(rm.id, { stock: Math.max(0, rm.stock - 1), updatedAt: new Date().toISOString() }); await refreshAllData(); }}
                             className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 font-bold cursor-pointer"
                           >−</button>
                           <span className="font-black text-emerald-500 text-sm px-2">Stock: {rm.stock}</span>
                           <button
-                            onClick={async () => { await db.rawMaterials.update(rm.id, { stock: rm.stock + 1 }); await refreshAllData(); }}
+                            onClick={async () => { await db.rawMaterials.update(rm.id, { stock: rm.stock + 1, updatedAt: new Date().toISOString() }); await refreshAllData(); }}
                             className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 font-bold cursor-pointer"
                           >+</button>
                         </div>
@@ -2386,7 +2388,7 @@ export default function MujahidElectronicApp() {
                         <span className="font-bold">₹{r.estimatedCost}</span>
                         <select
                           value={r.status}
-                          onChange={async (e) => { await db.repairs.update(r.id, { status: e.target.value }); await refreshAllData(); }}
+                          onChange={async (e) => { await db.repairs.update(r.id, { status: e.target.value, updatedAt: new Date().toISOString(), syncStatus: 'PENDING_SYNC' }); await refreshAllData(); }}
                           className="bg-white dark:bg-slate-800 rounded px-2 py-1 font-bold"
                         >
                           <option value="Received">Received</option>
