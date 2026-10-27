@@ -39,19 +39,20 @@ export async function POST(request) {
       const rows = Array.isArray(body[localKey]) ? body[localKey] : [];
       const { data: remoteRows, error: readError } = await supabase
         .from(table)
-        .select(`${remoteKey}, payload, updated_at`);
+        .select(`${remoteKey}, payload`);
       if (readError) throw new Error(`${table}: ${readError.message}`);
 
       const remoteByKey = new Map((remoteRows || []).map((row) => [String(row[remoteKey]), row]));
       const rowsToUpsert = rows.filter((row) => {
         const remote = remoteByKey.get(String(row[remoteKey]));
         if (!remote) return true;
-        const incomingTime = Date.parse(row.updated_at || row.payload?.updatedAt || '');
-        const remoteTime = Date.parse(remote.updated_at || remote.payload?.updatedAt || '');
+        const incomingTime = Date.parse(row.payload?.updatedAt || row.payload?.createdAt || '');
+        const remoteTime = Date.parse(remote.payload?.updatedAt || remote.payload?.createdAt || '');
         return !Number.isFinite(remoteTime) || (Number.isFinite(incomingTime) && incomingTime > remoteTime);
       });
       if (rowsToUpsert.length > 0) {
-        const { error: upsertError } = await supabase.from(table).upsert(rowsToUpsert);
+        const compatibleRows = rowsToUpsert.map(({ updated_at: _updatedAt, ...row }) => row);
+        const { error: upsertError } = await supabase.from(table).upsert(compatibleRows);
         if (upsertError) throw new Error(`${table}: ${upsertError.message}`);
       }
 
