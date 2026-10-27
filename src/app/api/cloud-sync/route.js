@@ -37,8 +37,21 @@ export async function POST(request) {
 
     for (const [table, localKey, remoteKey] of tableConfig) {
       const rows = Array.isArray(body[localKey]) ? body[localKey] : [];
-      if (rows.length > 0) {
-        const { error: upsertError } = await supabase.from(table).upsert(rows);
+      const { data: remoteRows, error: readError } = await supabase
+        .from(table)
+        .select(`${remoteKey}, payload, updated_at`);
+      if (readError) throw new Error(`${table}: ${readError.message}`);
+
+      const remoteByKey = new Map((remoteRows || []).map((row) => [String(row[remoteKey]), row]));
+      const rowsToUpsert = rows.filter((row) => {
+        const remote = remoteByKey.get(String(row[remoteKey]));
+        if (!remote) return true;
+        const incomingTime = Date.parse(row.updated_at || row.payload?.updatedAt || '');
+        const remoteTime = Date.parse(remote.updated_at || remote.payload?.updatedAt || '');
+        return !Number.isFinite(remoteTime) || (Number.isFinite(incomingTime) && incomingTime >= remoteTime);
+      });
+      if (rowsToUpsert.length > 0) {
+        const { error: upsertError } = await supabase.from(table).upsert(rowsToUpsert);
         if (upsertError) throw new Error(`${table}: ${upsertError.message}`);
       }
 

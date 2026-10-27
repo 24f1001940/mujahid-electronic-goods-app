@@ -196,6 +196,19 @@ body {
     align-items: flex-start;
   }
 
+  .admin-nav-heading > div:first-child {
+    min-width: 0;
+  }
+
+  .admin-nav-heading > div:last-child {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .admin-nav-subtitle {
+    display: none;
+  }
+
   .admin-nav-items {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -205,12 +218,31 @@ body {
     overflow: visible;
   }
 
+  .admin-navigation-collapsed .admin-nav-items {
+    display: none;
+  }
+
   .admin-nav-item {
     min-height: 2.5rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+
+  .admin-nav-item svg {
+    flex-shrink: 0;
+  }
+
+  .admin-nav-toggle {
+    display: inline-flex;
   }
 
   .admin-nav-tools {
     justify-content: stretch;
+  }
+
+  .admin-nav-toggle {
+    display: none;
   }
 
   .admin-nav-tools button {

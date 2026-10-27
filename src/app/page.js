@@ -32,6 +32,7 @@ export default function MujahidElectronicApp() {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminTab, setAdminTab] = useState('pos');
+  const [adminNavCollapsed, setAdminNavCollapsed] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPin, setLoginPin] = useState('');
@@ -190,6 +191,11 @@ export default function MujahidElectronicApp() {
     await refreshAllData();
     setSyncingCloud(false);
     alert(res.message);
+  };
+
+  const selectAdminTab = (tab) => {
+    setAdminTab(tab);
+    setAdminNavCollapsed(true);
   };
 
   // ================= CATEGORIES & 2-3 CHAR FUZZY SEARCH =================
@@ -1405,11 +1411,11 @@ export default function MujahidElectronicApp() {
           <div className="admin-suite space-y-6">
             
             {/* Admin Navigation Bar */}
-            <div className="admin-navigation bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className={`admin-navigation bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm ${adminNavCollapsed ? 'admin-navigation-collapsed' : ''}`}>
               <div className="admin-nav-heading">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500">Management workspace</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Select a workspace to manage the shop</p>
+                  <p className="admin-nav-subtitle text-xs text-slate-500 dark:text-slate-400 mt-1">Select a workspace to manage the shop</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="hidden sm:inline-flex status-pill">{isOnline ? '● Synced' : '● Offline'}</span>
@@ -1420,9 +1426,17 @@ export default function MujahidElectronicApp() {
                   >
                     <Cloud className="w-3.5 h-3.5" /> {syncingCloud ? 'Syncing...' : 'Sync Cloud'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdminNavCollapsed((collapsed) => !collapsed)}
+                    className="admin-nav-toggle px-2.5 py-2 rounded-xl text-xs font-bold border border-slate-500/30 text-slate-400 cursor-pointer"
+                    aria-expanded={!adminNavCollapsed}
+                  >
+                    {adminNavCollapsed ? 'Menu' : 'Minimize'}
+                  </button>
                 </div>
               </div>
-              <div className="admin-nav-items">
+              <div className="admin-nav-items" aria-hidden={adminNavCollapsed}>
                 {[
                   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
                   { id: 'pos', label: 'Billing (POS)', icon: ShoppingCart },
@@ -1440,7 +1454,7 @@ export default function MujahidElectronicApp() {
                   return (
                     <button
                       key={t.id}
-                      onClick={() => setAdminTab(t.id)}
+                      onClick={() => selectAdminTab(t.id)}
                       aria-current={adminTab === t.id ? 'page' : undefined}
                       className={`admin-nav-item px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
                         adminTab === t.id

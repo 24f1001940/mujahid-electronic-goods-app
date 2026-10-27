@@ -29,6 +29,21 @@ db.version(2).stores({
   repairPayments: '++id, tokenNo, type, createdAt, syncStatus'
 });
 
+db.version(3).stores({
+  products: '++id, name, category, itemType, syncStatus, updatedAt, isActive',
+  invoices: '++id, &invoiceNo, customerName, customerPhone, customerEmail, dateOnly, dateKey, udhaarAmount, syncStatus, updatedAt',
+  khata: '++id, &customerPhone, customerName, customerEmail, totalUdhaar, updatedAt',
+  repairs: '++id, &tokenNo, customerPhone, status, syncStatus, updatedAt',
+  expenses: '++id, title, amount, category, dateOnly, dateKey, createdAt, updatedAt, syncStatus',
+  qrs: '++id, name, upiId',
+  rawMaterials: '++id, name, stock, unitCost, qtyPerKit, updatedAt',
+  stockMovements: '++id, productId, type, referenceId, createdAt, syncStatus',
+  khataTransactions: '++id, customerPhone, type, invoiceNo, createdAt, syncStatus',
+  auditLogs: '++id, action, entityType, entityId, createdAt, syncStatus',
+  orders: '++id, &orderNo, customerPhone, status, createdAt, updatedAt, syncStatus',
+  repairPayments: '++id, tokenNo, type, createdAt, syncStatus'
+});
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 export const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
