@@ -21,67 +21,70 @@ export async function syncDeviceWithCloud() {
       db.repairPayments.toArray()
     ]);
 
-    const push = async (table, rows, mapRow) => {
-      if (rows.length === 0) return;
-      const { error } = await supabase.from(table).upsert(rows.map(mapRow));
-      if (error) throw new Error(`${table}: ${error.message}`);
-    };
-
-    await push('meg_products', products, (p) => ({
+    const payload = {
+      products: products.map((p) => ({
       id: p.id,
       payload: { ...p, syncStatus: 'SYNCED' },
       updated_at: p.updatedAt || new Date().toISOString()
-    }));
-    await push('meg_invoices', invoices, (i) => ({
+      })),
+      invoices: invoices.map((i) => ({
       invoice_no: i.invoiceNo,
       payload: { ...i, syncStatus: 'SYNCED' },
       updated_at: i.updatedAt || i.createdAtIso || new Date().toISOString()
-    }));
-    await push('meg_khata', khata, (k) => ({
+      })),
+      khata: khata.map((k) => ({
       customer_phone: k.customerPhone,
       payload: k,
       updated_at: k.updatedAt || new Date().toISOString()
-    }));
-    await push('meg_repairs', repairs, (r) => ({
+      })),
+      repairs: repairs.map((r) => ({
       token_no: r.tokenNo,
       payload: { ...r, syncStatus: 'SYNCED' },
       updated_at: r.updatedAt || new Date().toISOString()
-    }));
-    await push('meg_expenses', expenses, (e) => ({
+      })),
+      expenses: expenses.map((e) => ({
       id: e.id,
       payload: { ...e, syncStatus: 'SYNCED' },
       updated_at: e.updatedAt || e.createdAtIso || new Date().toISOString()
-    }));
-    await push('meg_raw_materials', rawMaterials, (rm) => ({
+      })),
+      rawMaterials: rawMaterials.map((rm) => ({
       id: rm.id,
       payload: rm,
       updated_at: rm.updatedAt || new Date().toISOString()
-    }));
-    await push('meg_orders', orders, (order) => ({
+      })),
+      orders: orders.map((order) => ({
       order_no: order.orderNo,
       payload: order,
       updated_at: order.updatedAt || order.createdAt || new Date().toISOString()
-    }));
-    await push('meg_repair_payments', repairPayments, (payment) => ({
+      })),
+      repairPayments: repairPayments.map((payment) => ({
       id: payment.id,
       payload: payment,
       updated_at: payment.createdAt || new Date().toISOString()
-    }));
-
-    const pull = async (table, localTable) => {
-      const { data, error } = await supabase.from(table).select('payload');
-      if (error) throw new Error(`${table}: ${error.message}`);
-      if (data?.length > 0) await localTable.bulkPut(data.map((row) => row.payload));
+      }))
     };
 
-    await pull('meg_products', db.products);
-    await pull('meg_invoices', db.invoices);
-    await pull('meg_khata', db.khata);
-    await pull('meg_repairs', db.repairs);
-    await pull('meg_expenses', db.expenses);
-    await pull('meg_raw_materials', db.rawMaterials);
-    await pull('meg_orders', db.orders);
-    await pull('meg_repair_payments', db.repairPayments);
+    const response = await fetch('/api/cloud-sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Cloud sync failed');
+
+    const localTables = {
+      products: db.products,
+      invoices: db.invoices,
+      khata: db.khata,
+      repairs: db.repairs,
+      expenses: db.expenses,
+      rawMaterials: db.rawMaterials,
+      orders: db.orders,
+      repairPayments: db.repairPayments
+    };
+    for (const [key, localTable] of Object.entries(localTables)) {
+      if (result[key]?.length > 0) await localTable.bulkPut(result[key]);
+    }
 
     await Promise.all([
       db.products.where('syncStatus').equals('PENDING_SYNC').modify({ syncStatus: 'SYNCED' }),
