@@ -1222,7 +1222,7 @@ export default function MujahidElectronicApp() {
                 </div>
 
                 {/* Category Filter Pills */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <div className="flex w-full min-w-0 max-w-full items-center gap-2 overflow-x-auto pb-1">
                   {categories.map((cat) => (
                     <button
                       key={cat}
