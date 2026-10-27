@@ -2568,19 +2568,19 @@ export default function MujahidElectronicApp() {
 
       {/* ==================== FOOTER ==================== */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="max-w-7xl mx-auto w-full min-w-0 px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex w-full max-w-full items-center gap-3 min-w-0">
             <img
               src="/favicon.ico"
               alt={`${SHOP_CONFIG.name} icon`}
               className="w-9 h-9 rounded-lg border border-emerald-500/30 shrink-0 object-cover"
             />
-            <div className="min-w-0">
+            <div className="min-w-0 max-w-full">
               <span className="font-bold text-slate-800 dark:text-slate-200">{SHOP_CONFIG.name} ({SHOP_CONFIG.tagline})</span>
               <p className="truncate">{SHOP_CONFIG.address}</p>
             </div>
           </div>
-          <div className="text-center sm:text-right">
+          <div className="w-full min-w-0 max-w-full text-center sm:text-right">
             <p>📞 {SHOP_CONFIG.phones.join(' | ')}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">Offline-First Cross-Platform Suite (Windows • Android • iOS)</p>
           </div>
