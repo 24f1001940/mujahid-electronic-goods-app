@@ -193,6 +193,14 @@ export default function MujahidElectronicApp() {
     alert(res.message);
   };
 
+  const replaceCloudWithLocalData = async () => {
+    setSyncingCloud(true);
+    const res = await syncDeviceWithCloud({ replaceCloud: true });
+    await refreshAllData();
+    setSyncingCloud(false);
+    alert(res.message);
+  };
+
   const selectAdminTab = (tab) => {
     setAdminTab(tab);
     setAdminNavCollapsed(true);
@@ -857,6 +865,7 @@ export default function MujahidElectronicApp() {
     await wipeEntireDatabaseClean();
     setCart([]);
     await refreshAllData();
+    await replaceCloudWithLocalData();
     alert('🧹 Database 100% wiped clean! You can now hand over a fresh system from scratch.');
   };
 
@@ -864,6 +873,7 @@ export default function MujahidElectronicApp() {
     if (!confirm('Reload the 8 default shop products (Ahuja NBA-15, Dawat Mic, Ajanta Clock, etc.) and default QRs?')) return;
     await reloadDefaultShopData();
     await refreshAllData();
+    await replaceCloudWithLocalData();
     alert('✅ Default shop products and QRs restored!');
   };
 

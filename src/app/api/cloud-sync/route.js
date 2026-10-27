@@ -37,6 +37,13 @@ export async function POST(request) {
 
     for (const [table, localKey, remoteKey] of tableConfig) {
       const rows = Array.isArray(body[localKey]) ? body[localKey] : [];
+      if (body.replaceCloud) {
+        const { error: deleteError } = await supabase
+          .from(table)
+          .delete()
+          .not(remoteKey, 'is', null);
+        if (deleteError) throw new Error(`${table}: ${deleteError.message}`);
+      }
       const { data: remoteRows, error: readError } = await supabase
         .from(table)
         .select(`${remoteKey}, payload`);

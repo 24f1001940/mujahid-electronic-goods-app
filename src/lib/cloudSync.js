@@ -1,7 +1,7 @@
 // src/lib/cloudSync.js
 import { db, supabase } from './db';
 
-export async function syncDeviceWithCloud() {
+export async function syncDeviceWithCloud(options = {}) {
   if (!supabase) {
     return {
       success: false,
@@ -22,6 +22,7 @@ export async function syncDeviceWithCloud() {
     ]);
 
     const payload = {
+      replaceCloud: options.replaceCloud === true,
       products: products.map((p) => ({
       id: p.id,
       payload: { ...p, syncStatus: 'SYNCED' },
