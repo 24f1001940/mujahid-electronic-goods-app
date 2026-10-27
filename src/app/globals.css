@@ -1,26 +1,289 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-main: #f4f7fb;
+  --text-main: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #eef4fa;
+  --border: #d7e2ef;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --bg-main: #050b16;
+  --text-main: #f5f8ff;
+  --surface: #101d33;
+  --surface-muted: #0b1426;
+  --border: #233a59;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.premium-panel,
+.metric-card,
+.trust-strip,
+.admin-product-card {
+  border-color: var(--border);
+}
+
+.admin-navigation {
+  position: sticky;
+  top: 5.5rem;
+  z-index: 20;
+  width: 100%;
+  min-width: 0;
+  background: color-mix(in srgb, var(--surface) 94%, #0878f9 6%);
+}
+
+.admin-nav-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0.25rem 0.8rem;
+}
+
+.admin-nav-items {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-nav-item {
+  min-width: 0;
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+}
+
+.admin-nav-tools {
+  margin-top: 0.7rem;
+}
+
+.admin-suite input:focus,
+.admin-suite select:focus,
+.admin-suite button:focus-visible,
+.admin-suite a:focus-visible {
+  outline: 2px solid #00d9ff;
+  outline-offset: 2px;
+}
+
+.premium-panel {
+  background: var(--surface);
+  border-width: 1px;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 12px 30px rgba(2, 12, 27, 0.12);
+}
+
+.metric-card {
+  min-width: 0;
+  border-width: 1px;
+  border-radius: 1rem;
+  padding: 0.9rem;
+  background: linear-gradient(145deg, var(--surface), var(--surface-muted));
+}
+
+.metric-card p,
+.metric-card span {
+  display: block;
+  color: #8fa4bf;
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+
+.metric-card strong {
+  display: block;
+  margin: 0.35rem 0;
+  color: var(--text-main);
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  overflow-wrap: anywhere;
+}
+
+.metric-cyan { border-top: 2px solid #00d9ff; }
+.metric-blue { border-top: 2px solid #0878f9; }
+.metric-violet { border-top: 2px solid #8b5cf6; }
+.metric-amber { border-top: 2px solid #f59e0b; }
+.metric-orange { border-top: 2px solid #f97316; }
+.metric-green { border-top: 2px solid #00c991; }
+.metric-red { border-top: 2px solid #ef4444; }
+
+.status-pill {
+  border: 1px solid rgba(0, 217, 255, 0.25);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  color: #67e8f9;
+  background: rgba(0, 217, 255, 0.08);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.activity-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--text-main);
+  font-size: 0.75rem;
+}
+
+.activity-row span {
+  color: #8fa4bf;
+}
+
+.activity-row b {
+  flex-shrink: 0;
+  color: #67e8f9;
+}
+
+.empty-state {
+  border: 1px dashed var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  color: #8fa4bf;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.trust-strip {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--surface) 88%, #0878f9 12%);
+}
+
+.trust-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem;
+}
+
+.trust-item strong,
+.trust-item span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.trust-item strong {
+  color: var(--text-main);
+  font-size: 0.72rem;
+}
+
+.trust-item span {
+  margin-top: 0.15rem;
+  color: #8fa4bf;
+  font-size: 0.65rem;
+}
+
+@media (max-width: 639px) {
+  .admin-navigation {
+    top: 4.5rem;
+  }
+
+  .admin-nav-heading {
+    align-items: flex-start;
+  }
+
+  .admin-nav-items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  .admin-nav-item {
+    min-height: 2.5rem;
+  }
+
+  .admin-nav-tools {
+    justify-content: stretch;
+  }
+
+  .admin-nav-tools button {
+    flex: 1;
+  }
+
+  .admin-product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trust-item {
+    align-items: flex-start;
+  }
+}
+
+.admin-product-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  align-content: start;
+  min-width: 0;
+}
+
+.admin-product-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-product-card > button {
+  min-width: 0;
+  text-align: left;
+}
+
+.map-pulse {
+  animation: map-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes map-pulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-3px) scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.public-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.public-bottom-nav + footer {
+  padding-bottom: 5.5rem;
+}
+
+.rtl {
+  direction: rtl;
+}
+
+/* Print Styles for Thermal / A4 Cash Memo */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
 }

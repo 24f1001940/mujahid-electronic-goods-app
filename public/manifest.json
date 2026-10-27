@@ -1,0 +1,16 @@
+{
+  "name": "Mujahid Electronic Goods",
+  "short_name": "Mujahid POS",
+  "description": "Official Storefront & Offline POS for Mujahid Electronic Goods, Hazrat Nizamuddin",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

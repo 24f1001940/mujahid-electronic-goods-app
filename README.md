@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Mujahid Electronic Goods POS
 
-## Getting Started
+Offline-first storefront and shop POS for Mujahid Electronic Goods. The application supports
+product catalog browsing, counter billing, stock management, Udhaar/Khata, repairs, expenses,
+PDF receipts, WhatsApp sharing, optional email delivery, and optional Supabase synchronization.
 
-First, run the development server:
+## Local setup
 
 ```bash
+npm install
+copy .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set these values in `.env.local` before using the Admin POS:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```text
+ADMIN_EMAIL=the-owner-email
+ADMIN_PASSWORD=a-long-random-password
+AUTH_SECRET=a-long-random-secret
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The admin password and signing secret are server-only. Never prefix them with `NEXT_PUBLIC_`
+and never commit `.env.local`.
 
-## Learn More
+Optional values:
 
-To learn more about Next.js, take a look at the following resources:
+- `GMAIL_USER` and `GMAIL_APP_PASSWORD` enable direct bill email.
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` enable the existing cloud-sync adapter.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Validation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-## Deploy on Vercel
+The app remains usable in local/offline mode without Supabase. IndexedDB is used for local
+transactions and the browser backup screen can export the current shop data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Important production notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The admin session is an HttpOnly, signed cookie. Configure the required auth environment
+  variables before deployment.
+- Do not use the development database as the only copy of business records. Configure and test
+  backups before handing the system to the shop.
+- Cloud sync requires matching Supabase tables and policies. A failed sync is reported rather
+  than silently marking records as synchronized.
+- Tax is currently disabled. Invoice data is not a GST invoice unless tax configuration is
+  deliberately added and verified for the business.
+- See [DEPLOYMENT.md](./DEPLOYMENT.md) for Vercel, Supabase, environment variables, and
+  production smoke-test steps.
