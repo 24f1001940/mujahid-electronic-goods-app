@@ -32,7 +32,7 @@ export default function MujahidElectronicApp() {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminTab, setAdminTab] = useState('pos');
-  const [adminNavCollapsed, setAdminNavCollapsed] = useState(false);
+  const [adminNavCollapsed, setAdminNavCollapsed] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPin, setLoginPin] = useState('');
@@ -46,7 +46,6 @@ export default function MujahidElectronicApp() {
   const syncInFlight = useRef(false);
   const isAdminRef = useRef(false);
   const isOnlineRef = useRef(isOnline);
-  const scheduleAutoSyncRef = useRef(null);
 
   // Public Website Customer Multi-Item Cart
   const [publicCart, setPublicCart] = useState([]);
@@ -123,7 +122,6 @@ export default function MujahidElectronicApp() {
     setRawMaterials(raw);
     setOrders(ord);
     if (q.length > 0 && !selectedQrId) setSelectedQrId(q[0].id);
-    scheduleAutoSyncRef.current?.();
   }, [selectedQrId]);
 
   const runCloudSync = useCallback(async ({ replaceCloud = false, notify = false } = {}) => {
@@ -148,13 +146,6 @@ export default function MujahidElectronicApp() {
       runCloudSync();
     }, 1200);
   }, [runCloudSync]);
-
-  useEffect(() => {
-    scheduleAutoSyncRef.current = scheduleAutoSync;
-    return () => {
-      scheduleAutoSyncRef.current = null;
-    };
-  }, [scheduleAutoSync]);
 
   // Client Initialization + Offline Service Worker + Install App Prompt
   useEffect(() => {
