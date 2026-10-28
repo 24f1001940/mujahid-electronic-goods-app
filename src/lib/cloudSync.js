@@ -70,7 +70,13 @@ export async function syncDeviceWithCloud(options = {}) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const result = await response.json();
+    const responseText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error(`Cloud sync returned HTTP ${response.status} instead of JSON. ${responseText.slice(0, 120)}`);
+    }
     if (!response.ok) throw new Error(result.error || 'Cloud sync failed');
 
     const localTables = {

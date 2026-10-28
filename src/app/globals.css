@@ -241,10 +241,6 @@ body {
     justify-content: stretch;
   }
 
-  .admin-nav-toggle {
-    display: none;
-  }
-
   .admin-nav-tools button {
     flex: 1;
   }
@@ -272,6 +268,57 @@ body {
 .admin-product-card > button {
   min-width: 0;
   text-align: left;
+}
+
+@media (min-width: 1024px) {
+  .admin-suite {
+    display: grid;
+    grid-template-columns: minmax(220px, 250px) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+  }
+
+  .admin-suite > .admin-navigation {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    position: sticky;
+    top: 1rem;
+  }
+
+  .admin-suite > :not(.admin-navigation) {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .admin-navigation {
+    padding: 1rem;
+  }
+
+  .admin-nav-heading {
+    display: block;
+  }
+
+  .admin-nav-heading > div:last-child {
+    justify-content: flex-start;
+    margin-top: 1rem;
+  }
+
+  .admin-nav-items {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+    margin-top: 1rem;
+  }
+
+  .admin-nav-item {
+    min-width: 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .admin-nav-tools {
+    margin-top: 1rem;
+  }
 }
 
 .map-pulse {

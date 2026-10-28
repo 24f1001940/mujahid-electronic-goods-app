@@ -1,7 +1,7 @@
 // src/app/page.js
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Fuse from 'fuse.js';
 import {
   Search, Mic, Sun, Moon, Lock, Unlock, Eye, EyeOff, ShoppingCart,
@@ -42,6 +42,11 @@ export default function MujahidElectronicApp() {
   const [syncingCloud, setSyncingCloud] = useState(false);
   const [todayStr, setTodayStr] = useState('');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const autoSyncTimer = useRef(null);
+  const syncInFlight = useRef(false);
+  const isAdminRef = useRef(false);
+  const isOnlineRef = useRef(isOnline);
+  const scheduleAutoSyncRef = useRef(null);
 
   // Public Website Customer Multi-Item Cart
   const [publicCart, setPublicCart] = useState([]);
@@ -118,7 +123,38 @@ export default function MujahidElectronicApp() {
     setRawMaterials(raw);
     setOrders(ord);
     if (q.length > 0 && !selectedQrId) setSelectedQrId(q[0].id);
+    scheduleAutoSyncRef.current?.();
   }, [selectedQrId]);
+
+  const runCloudSync = useCallback(async ({ replaceCloud = false, notify = false } = {}) => {
+    if (syncInFlight.current || !isAdminRef.current || !isOnlineRef.current) return { success: false };
+    syncInFlight.current = true;
+    setSyncingCloud(true);
+    try {
+      const result = await syncDeviceWithCloud({ replaceCloud });
+      if (result.success) await refreshAllData();
+      if (notify) alert(result.message);
+      return result;
+    } finally {
+      syncInFlight.current = false;
+      setSyncingCloud(false);
+    }
+  }, [refreshAllData]);
+
+  const scheduleAutoSync = useCallback(() => {
+    if (!isAdminRef.current || !isOnlineRef.current || syncInFlight.current) return;
+    window.clearTimeout(autoSyncTimer.current);
+    autoSyncTimer.current = window.setTimeout(() => {
+      runCloudSync();
+    }, 1200);
+  }, [runCloudSync]);
+
+  useEffect(() => {
+    scheduleAutoSyncRef.current = scheduleAutoSync;
+    return () => {
+      scheduleAutoSyncRef.current = null;
+    };
+  }, [scheduleAutoSync]);
 
   // Client Initialization + Offline Service Worker + Install App Prompt
   useEffect(() => {
@@ -131,8 +167,11 @@ export default function MujahidElectronicApp() {
         const response = await fetch('/api/auth/session');
         const session = await response.json();
         setIsAdmin(session.authenticated === true);
+        isAdminRef.current = session.authenticated === true;
+        if (session.authenticated === true) scheduleAutoSync();
       } catch {
         setIsAdmin(false);
+        isAdminRef.current = false;
       }
     };
     setup();
@@ -149,18 +188,37 @@ export default function MujahidElectronicApp() {
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      isOnlineRef.current = true;
+      setIsOnline(true);
+      scheduleAutoSync();
+    };
+    const handleOffline = () => {
+      isOnlineRef.current = false;
+      setIsOnline(false);
+    };
+    const handleFocus = () => scheduleAutoSync();
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       window.clearTimeout(todayTimer);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('focus', handleFocus);
+      window.clearTimeout(autoSyncTimer.current);
     };
-  }, [refreshAllData]);
+  }, [refreshAllData, scheduleAutoSync]);
+
+  useEffect(() => {
+    isAdminRef.current = isAdmin;
+    if (!isAdmin) return undefined;
+    scheduleAutoSync();
+    const interval = window.setInterval(scheduleAutoSync, 15000);
+    return () => window.clearInterval(interval);
+  }, [isAdmin, scheduleAutoSync]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -186,24 +244,17 @@ export default function MujahidElectronicApp() {
 
   // Cloud Sync Trigger
   const handleCloudSync = async () => {
-    setSyncingCloud(true);
-    const res = await syncDeviceWithCloud();
-    await refreshAllData();
-    setSyncingCloud(false);
-    alert(res.message);
+    await runCloudSync({ notify: true });
   };
 
   const replaceCloudWithLocalData = async () => {
-    setSyncingCloud(true);
-    const res = await syncDeviceWithCloud({ replaceCloud: true });
-    await refreshAllData();
-    setSyncingCloud(false);
-    alert(res.message);
+    await runCloudSync({ replaceCloud: true, notify: true });
   };
 
   const selectAdminTab = (tab) => {
     setAdminTab(tab);
     setAdminNavCollapsed(true);
+    scheduleAutoSync();
   };
 
   // ================= CATEGORIES & 2-3 CHAR FUZZY SEARCH =================
