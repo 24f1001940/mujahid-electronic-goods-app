@@ -262,7 +262,7 @@ export default function MujahidElectronicApp() {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    let baseList = selectedCategory === 'ALL'
+    let baseList = isAdmin || selectedCategory === 'ALL'
       ? products
       : products.filter(p => p.category === selectedCategory);
 
@@ -295,7 +295,7 @@ export default function MujahidElectronicApp() {
       if (!combined.some(c => c.id === item.id)) combined.push(item);
     });
     return combined;
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, searchQuery, selectedCategory, isAdmin]);
 
   const featuredProducts = useMemo(
     () => products.filter(product => product.image).slice(0, 6),
@@ -1675,17 +1675,37 @@ export default function MujahidElectronicApp() {
 
             {/* ==================== TAB 1: COUNTER BILLING (POS) ==================== */}
             {adminTab === 'pos' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="admin-product-grid lg:col-span-7 grid gap-3.5 max-h-[75vh] overflow-y-auto pr-1">
-                  {filteredProducts.map((prod) => (
+              <div className="pos-workspace grid grid-cols-1 xl:grid-cols-12 gap-6">
+                <section className="pos-product-column xl:col-span-7" aria-labelledby="pos-products-heading">
+                  <div className="pos-section-heading">
+                    <div>
+                      <h2 id="pos-products-heading">Products</h2>
+                      <p>Choose an item to add it to the current bill.</p>
+                    </div>
+                    <span className="pos-product-count">{filteredProducts.length} items</span>
+                  </div>
+                  <div className="admin-product-grid pos-product-list grid gap-3.5 max-h-[75vh] overflow-y-auto pr-1" aria-live="polite">
+                  {filteredProducts.length === 0 ? (
+                    <div className="pos-empty-state col-span-full" role="status">
+                      <Package className="h-6 w-6" />
+                      <h3>{searchQuery ? `No products found for "${searchQuery}"` : 'No products are available'}</h3>
+                      <p>{searchQuery ? 'Try a different name or clear the search.' : 'Add products in Stock to start billing.'}</p>
+                      {searchQuery && (
+                        <button type="button" onClick={() => setSearchQuery('')}>
+                          Clear search
+                        </button>
+                      )}
+                    </div>
+                  ) : filteredProducts.map((prod) => (
                     <div
                       key={prod.id}
-                      className="admin-product-card bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 transition grid grid-cols-[64px_minmax(0,1fr)_auto] gap-3 items-center shadow-sm"
+                      className={`admin-product-card pos-product-card bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 transition grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center shadow-sm ${cart.some(item => item.id === prod.id) ? 'pos-product-card-in-bill' : ''}`}
                     >
                       <button
                         type="button"
                         onClick={() => addToCart(prod)}
-                        className="contents cursor-pointer"
+                        className="pos-product-trigger min-w-0 grid grid-cols-[64px_minmax(0,1fr)] gap-3 items-center text-left cursor-pointer"
+                        aria-pressed={cart.some(item => item.id === prod.id)}
                         aria-label={`Add ${getProductName(prod)} to bill`}
                       >
                         <img src={prod.image} alt={prod.name} className="w-16 h-16 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
@@ -1712,7 +1732,10 @@ export default function MujahidElectronicApp() {
                         </div>
                       </button>
 
-                      <div className="min-w-[78px] flex flex-col items-end gap-2">
+                      <div className="pos-product-actions min-w-[78px] flex flex-col items-end gap-2">
+                        {cart.find(item => item.id === prod.id) && (
+                          <span className="pos-in-bill">In bill ({cart.find(item => item.id === prod.id)?.qty})</span>
+                        )}
                         <span className="text-base sm:text-lg font-black text-cyan-600 dark:text-cyan-300 whitespace-nowrap">
                           ₹{Number(prod.displayPrice || 0).toLocaleString('en-IN')}
                         </span>
@@ -1732,10 +1755,11 @@ export default function MujahidElectronicApp() {
                       </div>
                     </div>
                   ))}
-                </div>
+                  </div>
+                </section>
 
                 {/* Right 5 Cols: Active Cash Memo */}
-                <div id="printable-receipt" className="lg:col-span-5 bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col justify-between space-y-4">
+                <div id="printable-receipt" className="pos-invoice-panel xl:col-span-5 bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col justify-between space-y-4">
                   <div>
                     <div className="flex justify-between items-start border-b border-slate-200 dark:border-slate-700 pb-3">
                       <div>
@@ -1746,7 +1770,7 @@ export default function MujahidElectronicApp() {
                       <button onClick={resetCartAfterSale} className="text-xs text-red-500 font-bold cursor-pointer">Clear</button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 my-3">
+                    <div className="pos-customer-fields grid grid-cols-1 sm:grid-cols-3 gap-2 my-3">
                       <input
                         type="text"
                         value={custName}
@@ -1770,20 +1794,20 @@ export default function MujahidElectronicApp() {
                       />
                     </div>
 
-                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    <div className="pos-cart-items space-y-2 max-h-52 overflow-y-auto pr-1">
                       {cart.length === 0 ? (
                         <div className="text-center py-8 text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                           Tap any item on the left to add to this Cash Memo.
                         </div>
                       ) : (
                         cart.map((item) => (
-                          <div key={item.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="font-bold">{item.name} <span className="text-slate-400">(Fixed: ₹{item.displayPrice})</span></span>
-                              <button onClick={() => removeFromCart(item.id)} className="text-red-400 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <div key={item.id} className="pos-cart-line p-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <div className="pos-cart-line-header flex justify-between items-center text-xs">
+                              <span className="pos-cart-line-name font-bold">{item.name} <span className="text-slate-400">(Fixed: ₹{item.displayPrice})</span></span>
+                              <button type="button" onClick={() => removeFromCart(item.id)} className="pos-remove-item text-red-400 cursor-pointer" aria-label={`Remove ${item.name} from bill`}><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
-                            <div className="flex items-center justify-between gap-2 text-xs">
-                              <div className="flex items-center gap-1">
+                            <div className="pos-cart-controls flex items-center justify-between gap-2 text-xs">
+                              <div className="pos-cart-quantity flex items-center gap-1">
                                 <span>Qty:</span>
                                 <input
                                   type="number"
@@ -1793,7 +1817,7 @@ export default function MujahidElectronicApp() {
                                   className="w-14 px-2 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 font-bold"
                                 />
                               </div>
-                              <div className="flex items-center gap-1">
+                              <div className="pos-cart-price flex items-center gap-1">
                                 <span>Bargain ₹:</span>
                                 <input
                                   type="number"
@@ -1802,7 +1826,7 @@ export default function MujahidElectronicApp() {
                                   className="w-20 px-2 py-1 rounded bg-white dark:bg-slate-800 border-2 border-emerald-500 font-bold text-emerald-500"
                                 />
                               </div>
-                              <span className="font-black">₹{item.qty * item.negotiatedPrice}</span>
+                              <span className="pos-cart-line-total font-black">₹{item.qty * item.negotiatedPrice}</span>
                             </div>
                           </div>
                         ))
@@ -1811,7 +1835,7 @@ export default function MujahidElectronicApp() {
                   </div>
 
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-3 space-y-2.5">
-                    <div className="flex justify-between items-center text-xs">
+                    <div className="pos-discount-row flex justify-between items-center text-xs">
                       <span className="text-amber-500 font-semibold">Extra Lump-Sum Bargain Discount (₹):</span>
                       <input
                         type="number"
@@ -1834,8 +1858,8 @@ export default function MujahidElectronicApp() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-700/40 p-2.5 rounded-xl text-xs">
-                      <div>
+                    <div className="pos-payment-summary grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-700/40 p-2.5 rounded-xl text-xs">
+                      <div className="pos-payment-mode">
                         <label className="text-[10px] text-slate-400 block">Mode</label>
                         <select
                           value={paymentMode}
@@ -1848,7 +1872,7 @@ export default function MujahidElectronicApp() {
                           <option value="UDHAAR">Full Udhaar</option>
                         </select>
                       </div>
-                      <div className={paymentMode === 'SPLIT' ? 'col-span-2' : ''}>
+                      <div className={`pos-payment-paid ${paymentMode === 'SPLIT' ? 'col-span-2' : ''}`}>
                         <label className="text-[10px] text-slate-400 block">Paid Now (₹)</label>
                         {paymentMode === 'SPLIT' ? (
                           <div className="grid grid-cols-3 gap-1 mt-1">
@@ -1860,7 +1884,7 @@ export default function MujahidElectronicApp() {
                           <input type="number" min="0" placeholder={String(finalPayable)} value={paidAmountInput} onChange={(e) => setPaidAmountInput(e.target.value)} className="w-full mt-1 px-2 py-1.5 rounded bg-white dark:bg-slate-800 font-bold text-emerald-500" />
                         )}
                       </div>
-                      <div>
+                      <div className="pos-payment-due">
                         <label className="text-[10px] text-slate-400 block">Udhaar Due (₹)</label>
                         <div className={`mt-1 px-2 py-1.5 rounded font-black ${udhaarAmount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-white dark:bg-slate-800 text-slate-400'}`}>
                           ₹{udhaarAmount}
@@ -1869,12 +1893,12 @@ export default function MujahidElectronicApp() {
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 min-w-0">
+                      <div className="pos-qr-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 min-w-0">
                         <span className="text-[11px] font-bold uppercase text-slate-400">Receive UPI On QR:</span>
                         <select
                           value={selectedQrId}
                           onChange={(e) => setSelectedQrId(Number(e.target.value))}
-                          className="w-full sm:w-auto max-w-full min-w-0 text-xs font-bold bg-white dark:bg-slate-800 rounded px-2 py-1"
+                          className="pos-qr-select w-full sm:w-auto max-w-full min-w-0 text-xs font-bold bg-white dark:bg-slate-800 rounded px-2 py-1"
                         >
                           {qrs.map((q) => (
                             <option key={q.id} value={q.id}>{q.name}</option>
