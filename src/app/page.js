@@ -56,6 +56,7 @@ export default function MujahidElectronicApp() {
 
   // Database Collections
   const [products, setProducts] = useState([]);
+  const [isCatalogReady, setIsCatalogReady] = useState(false);
   const [qrs, setQrs] = useState([]);
   const [repairs, setRepairs] = useState([]);
   const [invoices, setInvoices] = useState([]);
@@ -152,8 +153,14 @@ export default function MujahidElectronicApp() {
     const todayTimer = window.setTimeout(() => setTodayStr(new Date().toISOString().slice(0, 10)), 0);
 
     const setup = async () => {
-      await initDatabase();
-      await refreshAllData();
+      try {
+        await initDatabase();
+        await refreshAllData();
+      } catch (error) {
+        console.error('Shop data could not be loaded:', error);
+      } finally {
+        setIsCatalogReady(true);
+      }
       try {
         const response = await fetch('/api/auth/session');
         const session = await response.json();
@@ -1000,13 +1007,13 @@ export default function MujahidElectronicApp() {
     <div className={`min-h-screen flex flex-col justify-between transition-colors duration-200 ${lang === 'ur' ? 'rtl' : ''}`}>
       
       {/* ==================== TOP MULTI-DEVICE NAVBAR ==================== */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <header className="app-header sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="app-header-inner max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           
           {/* Brand Identity */}
           <div
             onClick={() => { setIsAdmin(false); setPublicSection('store'); }}
-            className="flex items-center gap-3 cursor-pointer min-w-0 max-w-full"
+            className="brand-lockup flex items-center gap-3 cursor-pointer min-w-0 max-w-full"
           >
             <img
               src="/favicon.ico"
@@ -1036,7 +1043,7 @@ export default function MujahidElectronicApp() {
 
           {/* Public Navigation Links */}
           {!isAdmin && (
-            <nav className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <nav className="desktop-site-nav hidden lg:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700" aria-label="Main navigation">
               <button
                 onClick={() => setPublicSection('store')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
@@ -1071,7 +1078,7 @@ export default function MujahidElectronicApp() {
           )}
 
           {/* Right Controls: Install App, Cloud Sync, Language, Theme, Admin Switch */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="header-controls flex items-center gap-2 flex-wrap">
             {/* Install App on Windows / Phone Button */}
             <button
               onClick={handleInstallApp}
@@ -1105,6 +1112,8 @@ export default function MujahidElectronicApp() {
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 cursor-pointer"
+              title={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+              aria-label={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
@@ -1136,20 +1145,20 @@ export default function MujahidElectronicApp() {
           <>
             {publicSection === 'store' && (
               <div className="space-y-6">
-                <div className="rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-emerald-500/20">
-                  <div className="space-y-2">
+                <div className="store-hero rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-emerald-500/20">
+                  <div className="store-hero-copy space-y-2">
                     <div className="inline-flex items-center gap-2 bg-white/15 px-3 py-1 rounded-full text-xs font-semibold">
                       <ShieldCheck className="w-4 h-4 text-emerald-300" /> Official Electronics Store
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-black">
+                    <h2 className="store-hero-title text-2xl sm:text-3xl font-black">
                       Portable PA Systems, Mics, Amplifiers & Home Electronics
                     </h2>
-                    <p className="text-xs sm:text-sm text-emerald-100 flex flex-wrap gap-4 pt-1">
+                    <p className="store-hero-details text-xs sm:text-sm text-emerald-100 flex flex-wrap gap-4 pt-1">
                       <span>📍 Shop No. 2, 165, Kanhaiya Market, Hazrat Nizamuddin, Delhi-13</span>
                       <span>📞 +91 8802572514, +91 8595431454</span>
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2.5">
+                  <div className="store-hero-actions flex flex-wrap gap-2.5">
                     <a
                       href={`https://wa.me/${SHOP_CONFIG.primaryWhatsApp}?text=${encodeURIComponent('Assalamu Alaikum! I want to inquire about electronics at Mujahid Electronic Goods.')}`}
                       target="_blank"
@@ -1162,7 +1171,7 @@ export default function MujahidElectronicApp() {
                 </div>
 
                 {featuredProducts.length > 0 && (
-                  <section className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-900 shadow-xl">
+                  <section className="featured-product relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-900 shadow-xl" aria-label="Featured product">
                     <div className="grid md:grid-cols-2 min-h-[230px]">
                       <div className="relative min-h-[220px] md:min-h-0 bg-slate-800">
                         <img
@@ -1251,7 +1260,7 @@ export default function MujahidElectronicApp() {
                 </section>
 
                 {/* Search + Voice Bar */}
-                <div className="flex gap-2">
+                <div className="catalog-search flex gap-2">
                   <div className="relative flex-1">
                     <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
                     <input
@@ -1282,7 +1291,7 @@ export default function MujahidElectronicApp() {
                 </div>
 
                 {/* Category Filter Pills */}
-                <div className="flex w-full min-w-0 max-w-full items-center gap-2 overflow-x-auto pb-1">
+                <div className="catalog-categories flex w-full min-w-0 max-w-full items-center gap-2 overflow-x-auto pb-1" aria-label="Product categories">
                   {categories.map((cat) => (
                     <button
                       key={cat}
@@ -1299,14 +1308,38 @@ export default function MujahidElectronicApp() {
                 </div>
 
                 {/* Product Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {filteredProducts.map((prod) => (
+                <div className="catalog-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" aria-live="polite" aria-busy={!isCatalogReady}>
+                  {!isCatalogReady ? (
+                    Array.from({ length: 4 }, (_, index) => (
+                      <div key={index} className="catalog-card catalog-skeleton" aria-hidden="true">
+                        <div className="catalog-skeleton-media" />
+                        <div className="catalog-skeleton-copy">
+                          <span />
+                          <span />
+                          <span />
+                        </div>
+                      </div>
+                    ))
+                  ) : filteredProducts.length === 0 ? (
+                    <div className="catalog-empty col-span-full" role="status">
+                      <div className="catalog-empty-icon"><Package className="h-6 w-6" /></div>
+                      <h3>{searchQuery ? `No products found for “${searchQuery}”` : 'No products in this category yet'}</h3>
+                      <p>Try another search or browse the full catalog.</p>
+                      <button
+                        type="button"
+                        onClick={() => { setSearchQuery(''); setSelectedCategory('ALL'); }}
+                        className="catalog-empty-action"
+                      >
+                        Show all products
+                      </button>
+                    </div>
+                  ) : filteredProducts.map((prod) => (
                     <div
                       key={prod.id}
-                      className="group bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-500/60 transition flex flex-col justify-between"
+                      className="catalog-card group bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-500/60 transition flex flex-col justify-between"
                     >
                       <div>
-                        <div className="relative h-40 sm:h-48 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
+                        <div className="catalog-card-media relative h-40 sm:h-48 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
                           <img src={prod.image} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                           <span className="absolute bottom-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-300">
                             🛡️ {prod.warranty || 'Standard'}
@@ -1318,7 +1351,7 @@ export default function MujahidElectronicApp() {
                           {getProductName(prod) !== prod.name && <p className="text-xs text-slate-400 mt-1 break-words">{prod.name}</p>}
                         </div>
                       </div>
-                      <div className="px-4 pb-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap items-end justify-between gap-3">
+                      <div className="catalog-card-footer px-4 pb-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap items-end justify-between gap-3">
                         <div className="min-w-0">
                           <span className="text-[11px] text-slate-400 block">Fixed Price</span>
                           <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{prod.displayPrice}</span>
@@ -1353,7 +1386,7 @@ export default function MujahidElectronicApp() {
 
             {/* PUBLIC SUB-VIEW B: TRACK REPAIR OR BILL */}
             {publicSection === 'track' && (
-              <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-5">
+              <div className="store-panel max-w-3xl mx-auto bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-5">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
                     <Wrench className="w-6 h-6" />
@@ -1383,7 +1416,7 @@ export default function MujahidElectronicApp() {
                         r.tokenNo?.toLowerCase().includes(publicTrackQuery.trim().toLowerCase())
                       )
                       .map(r => (
-                        <div key={r.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div key={r.id} className="store-record p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
                           <div>
                             <span className="font-black text-emerald-500 text-sm">{r.tokenNo}</span> — <b>{r.customerName}</b>
                             <p className="text-slate-400 mt-1">{r.itemName} | Logged: {r.createdAt}</p>
@@ -1402,7 +1435,7 @@ export default function MujahidElectronicApp() {
                         inv.invoiceNo?.toLowerCase().includes(publicTrackQuery.trim().toLowerCase())
                       )
                       .map(inv => (
-                        <div key={inv.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div key={inv.id} className="store-record p-4 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
                           <div>
                             <span className="font-black text-emerald-500 text-sm">{inv.invoiceNo}</span> — Purchased on {inv.createdAt}
                             <p className="text-slate-400 mt-1">
@@ -1425,7 +1458,7 @@ export default function MujahidElectronicApp() {
             {/* PUBLIC SUB-VIEW C: ABOUT SHOP */}
             {publicSection === 'about' && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                <div className="md:col-span-7 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-5">
+                <div className="store-panel md:col-span-7 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-5">
                   <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-bold">
                     <Award className="w-4 h-4" /> Official Store in Hazrat Nizamuddin
                   </div>
@@ -1437,7 +1470,7 @@ export default function MujahidElectronicApp() {
                   </p>
                 </div>
 
-                <div className="md:col-span-5 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-4 flex flex-col justify-between">
+                <div className="store-panel md:col-span-5 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg space-y-4 flex flex-col justify-between">
                   <div className="space-y-3 text-xs sm:text-sm">
                     <h3 className="text-lg font-black flex items-center gap-2">
                       <Compass className="w-5 h-5 text-emerald-500 map-pulse" /> Visit Our Shop
@@ -2527,7 +2560,7 @@ export default function MujahidElectronicApp() {
       {/* ==================== PUBLIC CUSTOMER MULTI-ITEM CART MODAL ==================== */}
       {showPublicCartModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4">
+          <div className="dialog-panel bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3">
               <h3 className="font-black text-lg flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-emerald-500" /> Your Order Bag
@@ -2595,7 +2628,7 @@ export default function MujahidElectronicApp() {
       )}
 
       {!isAdmin && (
-        <nav className="public-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(15,23,42,0.12)]">
+        <nav className="public-bottom-nav mobile-dock fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(15,23,42,0.12)] lg:hidden" aria-label="Mobile navigation">
           <div className="max-w-xl mx-auto px-3 py-2 flex items-center justify-around gap-1">
             <img
               src="/favicon.ico"
@@ -2660,7 +2693,7 @@ export default function MujahidElectronicApp() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <form
             onSubmit={handleAdminLogin}
-            className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4"
+            className="dialog-panel bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4"
           >
             <div className="flex justify-between items-center">
               <h3 className="font-black text-lg">🔒 Owner / Son Admin Login</h3>
